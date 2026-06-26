@@ -22,6 +22,21 @@
 
 ## 安装与启动
 
+**推荐（跨平台）**：在项目根目录执行：
+
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+Linux 远程服务器：
+
+```bash
+OPEN_BROWSER=0 HOST=0.0.0.0 ./start.sh
+```
+
+**手动安装**：
+
 ```bash
 cd app
 python3 -m venv .venv
@@ -29,6 +44,8 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python app.py
 ```
+
+Linux 若 `python3 -m venv` 失败，请先安装 `python3-venv`（Debian/Ubuntu: `sudo apt install python3-venv`）。
 
 若 `pip` 遇到 SSL 错误，可用清华 HTTP 镜像（跳过 SSL）：
 

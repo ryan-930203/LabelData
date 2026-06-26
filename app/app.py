@@ -565,8 +565,11 @@ def main():
     parser = argparse.ArgumentParser(description="Web 标注平台")
     parser.add_argument(
         "--folder",
-        default=str((APP_DIR.parent / "80k_final_short" / "decoded").resolve()),
-        help="启动时默认导入的数据集文件夹路径",
+        default=os.environ.get(
+            "DATA_FOLDER",
+            str((APP_DIR.parent / "80k_final_short" / "decoded").resolve()),
+        ),
+        help="启动时默认导入的数据集文件夹路径（也可通过环境变量 DATA_FOLDER 设置）",
     )
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=5000)
