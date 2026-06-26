@@ -10,22 +10,32 @@
 <body>
   <header class="toolbar">
     <div class="import-row">
-      <label for="folder-input">数据集文件夹</label>
-      <input id="folder-input" type="text" placeholder="/path/to/decoded" spellcheck="false">
-      <button id="btn-browse" type="button">浏览</button>
-      <button id="btn-open" type="button">导入</button>
-      <span id="folder-status" class="muted">未导入数据集</span>
+      <div class="import-fields">
+        <label for="folder-input">数据集文件夹</label>
+        <input id="folder-input" type="text" placeholder="/path/to/decoded" spellcheck="false">
+      </div>
+      <div class="import-actions">
+        <button id="btn-browse" type="button">浏览</button>
+        <button id="btn-open" type="button">导入</button>
+      </div>
+      <span id="folder-status" class="folder-status muted">未导入数据集</span>
     </div>
     <div class="nav-row">
-      <button id="btn-prev" type="button" disabled>上一条</button>
-      <button id="btn-next" type="button" disabled>下一条</button>
-      <span id="progress-text">0 / 0</span>
-      <span id="annotated-text" class="muted">已标注 0</span>
-      <label for="jump-input">跳转</label>
-      <input id="jump-input" type="number" min="0" value="0" disabled>
-      <button id="btn-jump" type="button" disabled>跳转</button>
-      <button id="btn-random" type="button" disabled>随机</button>
-      <button id="btn-save" type="button" disabled>保存</button>
+      <div class="nav-group nav-group-primary">
+        <button id="btn-prev" type="button" disabled>上一条</button>
+        <button id="btn-next" type="button" disabled>下一条</button>
+        <button id="btn-save" type="button" class="btn-save" disabled>保存</button>
+      </div>
+      <div class="nav-group nav-group-stats">
+        <span id="progress-text">0 / 0</span>
+        <span id="annotated-text" class="muted">已标注 0</span>
+      </div>
+      <div class="nav-group nav-group-jump">
+        <label for="jump-input">跳转</label>
+        <input id="jump-input" type="number" min="0" value="0" disabled>
+        <button id="btn-jump" type="button" disabled>跳转</button>
+        <button id="btn-random" type="button" disabled>随机</button>
+      </div>
     </div>
   </header>
 
@@ -52,7 +62,7 @@
       <h2>标签</h2>
       <div id="labels-container" class="labels-container"></div>
       <label for="note-input">备注</label>
-      <textarea id="note-input" rows="4" placeholder="可选备注"></textarea>
+      <textarea id="note-input" rows="2" placeholder="可选备注"></textarea>
       <p class="hint">快捷键：← 上一条，→ 下一条，R 随机，Ctrl/Cmd+S 保存</p>
     </section>
   </main>
