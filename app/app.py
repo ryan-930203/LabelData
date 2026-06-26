@@ -13,6 +13,7 @@ from flask import Flask, jsonify, make_response, render_template, request, send_
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 APP_DIR = Path(__file__).resolve().parent
+STATIC_DIR = APP_DIR / "static"
 LABELS_PATH = APP_DIR / "labels.json"
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
@@ -430,7 +431,9 @@ def dataset_info() -> dict:
 
 @app.route("/")
 def index_page():
-    response = make_response(render_template("index.html"))
+    css = (STATIC_DIR / "style.css").read_text(encoding="utf-8")
+    js = (STATIC_DIR / "app.js").read_text(encoding="utf-8")
+    response = make_response(render_template("index.html", inline_css=css, inline_js=js))
     response.headers.update(NO_CACHE_HEADERS)
     return response
 

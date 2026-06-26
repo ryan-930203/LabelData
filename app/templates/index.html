@@ -4,9 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta name="app-base" content="{{ request.script_root }}">
   <title>Web 标注平台</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>{{ inline_css | safe }}</style>
 </head>
 <body>
   <header class="toolbar">
@@ -89,6 +88,6 @@
 
   <div id="toast" class="toast hidden"></div>
 
-  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <script>{{ inline_js | replace('</script>', '<\\/script>') | safe }}</script>
 </body>
 </html>

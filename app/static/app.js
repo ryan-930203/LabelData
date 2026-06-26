@@ -50,10 +50,14 @@ const browseState = {
 };
 
 function appUrl(path) {
-  const base = document.querySelector('meta[name="app-base"]')?.content || "";
-  const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base;
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  return `${normalizedBase}${normalizedPath}`;
+  const url = new URL(window.location.href);
+  const [pathname, search = ""] = path.split("?", 2);
+  const suffix = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  const basePath = url.pathname.endsWith("/") ? url.pathname.slice(0, -1) : url.pathname;
+  url.pathname = `${basePath}${suffix}`;
+  url.search = search ? `?${search}` : "";
+  url.hash = "";
+  return url.href;
 }
 
 function showToast(message) {
