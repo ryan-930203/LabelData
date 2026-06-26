@@ -25,6 +25,15 @@ NO_CACHE_HEADERS = {
 }
 
 
+def parse_json_body() -> dict:
+    data = request.get_json(silent=True, force=True)
+    if isinstance(data, dict):
+        return data
+    if request.form:
+        return request.form.to_dict()
+    return {}
+
+
 @app.after_request
 def disable_proxy_cache(response):
     if request.path == "/" or request.path.startswith("/api/"):
@@ -449,7 +458,7 @@ def api_browse():
 
 @app.route("/api/open", methods=["POST"])
 def api_open():
-    body = request.get_json(silent=True) or {}
+    body = parse_json_body()
     folder = body.get("folder", "").strip()
     if not folder:
         return jsonify({"error": "请提供 folder 路径"}), 400
@@ -537,7 +546,7 @@ def api_annotate():
     if current.folder is None:
         return jsonify({"error": "请先导入数据集文件夹"}), 400
 
-    body = request.get_json(silent=True) or {}
+    body = parse_json_body()
     item_id = body.get("id")
     index = body.get("index")
     labels = body.get("labels", [])
