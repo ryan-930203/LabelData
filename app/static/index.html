@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web 标注平台</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="toolbar">
+    <div class="import-row">
+      <label for="folder-input">数据集文件夹</label>
+      <input id="folder-input" type="text" placeholder="/path/to/decoded" spellcheck="false">
+      <button id="btn-browse" type="button">浏览</button>
+      <button id="btn-open" type="button">导入</button>
+      <span id="folder-status" class="muted">未导入数据集</span>
+    </div>
+    <div class="nav-row">
+      <button id="btn-prev" type="button" disabled>上一条</button>
+      <button id="btn-next" type="button" disabled>下一条</button>
+      <span id="progress-text">0 / 0</span>
+      <span id="annotated-text" class="muted">已标注 0</span>
+      <label for="jump-input">跳转</label>
+      <input id="jump-input" type="number" min="0" value="0" disabled>
+      <button id="btn-jump" type="button" disabled>跳转</button>
+      <button id="btn-random" type="button" disabled>随机</button>
+      <button id="btn-save" type="button" disabled>保存</button>
+    </div>
+  </header>
+
+  <main id="workspace" class="workspace hidden">
+    <section class="panel images-panel">
+      <h2>图片</h2>
+      <div id="images-container" class="images-container"></div>
+    </section>
+
+    <section class="panel conversation-panel">
+      <h2>对话</h2>
+      <div class="meta" id="item-meta"></div>
+      <div class="conversation-block">
+        <h3>Human</h3>
+        <div id="human-text" class="conversation-text"></div>
+      </div>
+      <div class="conversation-block">
+        <h3>GPT</h3>
+        <div id="gpt-text" class="conversation-text"></div>
+      </div>
+    </section>
+
+    <section class="panel labels-panel">
+      <h2>标签</h2>
+      <div id="labels-container" class="labels-container"></div>
+      <label for="note-input">备注</label>
+      <textarea id="note-input" rows="4" placeholder="可选备注"></textarea>
+      <p class="hint">快捷键：← 上一条，→ 下一条，R 随机，Ctrl/Cmd+S 保存</p>
+    </section>
+  </main>
+
+  <div id="empty-state" class="empty-state">
+  请在上方输入数据集文件夹绝对路径并点击「导入」，或点击「浏览」选择本地目录。
+  </div>
+
+  <div id="browse-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="browse-title">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h2 id="browse-title">选择数据集文件夹</h2>
+        <button id="btn-browse-close" type="button" class="btn-secondary">关闭</button>
+      </div>
+      <div class="browse-toolbar">
+        <button id="btn-browse-up" type="button" class="btn-secondary">上级</button>
+        <button id="btn-browse-home" type="button" class="btn-secondary">用户目录</button>
+        <button id="btn-browse-workspace" type="button" class="btn-secondary">工作区</button>
+        <span id="browse-current-path" class="browse-path"></span>
+      </div>
+      <div id="browse-dataset-hint" class="browse-hint muted"></div>
+      <ul id="browse-list" class="browse-list"></ul>
+      <div class="modal-footer">
+        <button id="btn-browse-select" type="button">选择此文件夹</button>
+        <button id="btn-browse-import" type="button">选择并导入</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="lightbox" class="lightbox hidden" tabindex="-1">
+    <img id="lightbox-img" alt="preview">
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
