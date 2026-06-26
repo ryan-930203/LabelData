@@ -29,10 +29,11 @@ chmod +x start.sh
 ./start.sh
 ```
 
-Linux 远程服务器：
+Linux 远程 / 端口转发部署：
 
 ```bash
-OPEN_BROWSER=0 HOST=0.0.0.0 ./start.sh
+OPEN_BROWSER=0 ./start.sh
+# 或指定端口: PORT=8080 ./start.sh
 ```
 
 **手动安装**：
@@ -49,7 +50,7 @@ python3 app.py
 pip install -i http://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn -r requirements.txt
 ```
 
-浏览器打开：http://127.0.0.1:5000
+浏览器打开：http://127.0.0.1:5000（若通过端口转发访问，使用转发后的地址即可）
 
 启动时可指定默认数据集：
 

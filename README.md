@@ -11,11 +11,18 @@ chmod +x start.sh
 ./start.sh
 ```
 
-Linux 远程服务器（允许局域网/外网访问）：
+默认监听 `0.0.0.0:5000`，适合 SSH 端口转发或平台只暴露一个端口的场景：
 
 ```bash
-OPEN_BROWSER=0 HOST=0.0.0.0 ./start.sh
+# 服务器上
+OPEN_BROWSER=0 ./start.sh
+
+# 本地转发（示例）
+ssh -L 8080:127.0.0.1:5000 user@server
+# 浏览器打开 http://127.0.0.1:8080
 ```
+
+若部署平台注入了 `PORT` 环境变量，脚本会自动使用该端口。
 
 ## Linux 依赖
 
@@ -34,7 +41,8 @@ sudo dnf install -y python3 python3-pip
 
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
-| `HOST` | 监听地址 | `127.0.0.1` |
-| `PORT` | 监听端口 | `5000` |
+| `HOST` | 监听地址 | `0.0.0.0` |
+| `PORT` | 监听端口 | `5000`（部署平台注入时自动使用） |
 | `OPEN_BROWSER` | 是否自动打开浏览器 | `1` |
 | `DATA_FOLDER` | 启动时默认数据集路径 | 见 `app.py` |
+| `PIP_INDEX_URL` | 自定义 pip 源 | 无（失败时自动尝试清华镜像） |

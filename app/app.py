@@ -571,8 +571,17 @@ def main():
         ),
         help="启动时默认导入的数据集文件夹路径（也可通过环境变量 DATA_FOLDER 设置）",
     )
-    parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=5000)
+    parser.add_argument(
+        "--host",
+        default=os.environ.get("HOST", "0.0.0.0"),
+        help="监听地址（默认 0.0.0.0，便于端口转发/远程访问）",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=int(os.environ.get("PORT", "5000")),
+        help="监听端口（默认 5000，也可通过环境变量 PORT 设置）",
+    )
     args = parser.parse_args()
 
     if args.folder and Path(args.folder).expanduser().exists():
@@ -584,7 +593,8 @@ def main():
         except Exception as e:
             print(f"默认数据集导入失败: {e}")
 
-    app.run(host=args.host, port=args.port, debug=False)
+    print(f"监听 {args.host}:{args.port}")
+    app.run(host=args.host, port=args.port, debug=False, threaded=True)
 
 
 if __name__ == "__main__":
