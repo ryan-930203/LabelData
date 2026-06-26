@@ -57,7 +57,18 @@ function showToast(message) {
 }
 
 async function api(path, options = {}) {
-  const res = await fetch(path, options);
+  const res = await fetch(path, {
+    cache: "no-store",
+    ...options,
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      ...(options.headers || {}),
+    },
+  });
+  if (res.status === 304) {
+    throw new Error("缓存响应导致数据为空，请强制刷新页面后重试");
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(data.error || `请求失败 (${res.status})`);

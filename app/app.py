@@ -16,6 +16,19 @@ LABELS_PATH = APP_DIR / "labels.json"
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 
+NO_CACHE_HEADERS = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+    "Pragma": "no-cache",
+    "Expires": "0",
+}
+
+
+@app.after_request
+def disable_proxy_cache(response):
+    if request.path == "/" or request.path.startswith("/api/"):
+        response.headers.update(NO_CACHE_HEADERS)
+    return response
+
 
 class DatasetState:
     def __init__(self):
@@ -410,7 +423,9 @@ def dataset_info() -> dict:
 
 @app.route("/")
 def index_page():
-    return send_from_directory(app.static_folder, "index.html")
+    response = send_from_directory(app.static_folder, "index.html", conditional=False)
+    response.headers.update(NO_CACHE_HEADERS)
+    return response
 
 
 @app.route("/api/browse")
