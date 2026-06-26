@@ -83,6 +83,29 @@ class DatasetState:
         return len(self.annotations)
 
 
+def is_labeled_annotation(annotation: dict) -> bool:
+    labels = annotation.get("labels", [])
+    return isinstance(labels, list) and bool(labels)
+
+
+def labeled_indices() -> list[int]:
+    if not current.ids:
+        return []
+    id_to_index = {item_id: idx for idx, item_id in enumerate(current.ids)}
+    indices: list[int] = []
+    for item_id, annotation in current.annotations.items():
+        if not is_labeled_annotation(annotation):
+            continue
+        idx = id_to_index.get(item_id)
+        if idx is not None:
+            indices.append(idx)
+    return sorted(indices)
+
+
+def labeled_count() -> int:
+    return len(labeled_indices())
+
+
 current = DatasetState()
 
 SHARD_RE = re.compile(r'"shard"\s*:\s*"([^"]+)"')
@@ -428,6 +451,8 @@ def dataset_info() -> dict:
         "annotations_path": str(current.annotations_path),
         "total": current.total,
         "annotated_count": current.annotated_count,
+        "labeled_count": labeled_count(),
+        "labeled_indices": labeled_indices(),
     }
     if current.source_type == "jsonl":
         info["jsonl_path"] = str(current.jsonl_path)
@@ -480,6 +505,8 @@ def api_meta():
                 "folder": None,
                 "total": 0,
                 "annotated_count": 0,
+                "labeled_count": 0,
+                "labeled_indices": [],
             }
         )
     return jsonify({"loaded": True, "labels": labels, **dataset_info()})
@@ -577,6 +604,8 @@ def api_annotate():
             "ok": True,
             "id": item_id,
             "annotated_count": current.annotated_count,
+            "labeled_count": labeled_count(),
+            "labeled_indices": labeled_indices(),
             "annotation": current.annotations[item_id],
         }
     )

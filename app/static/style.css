@@ -157,6 +157,19 @@ button.btn-save:not(:disabled):hover {
   border-radius: var(--radius-sm);
 }
 
+#filter-mode {
+  padding: 6px 8px;
+  border: 1px solid #ccd4dc;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font-size: 13px;
+  min-width: 96px;
+}
+
+.nav-group-filter {
+  flex: 0 0 auto;
+}
+
 .muted {
   color: var(--color-muted);
   font-size: 12px;

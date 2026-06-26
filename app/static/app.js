@@ -2,6 +2,9 @@ const state = {
   loaded: false,
   total: 0,
   annotatedCount: 0,
+  labeledCount: 0,
+  labeledIndices: [],
+  filterMode: "all",
   currentIndex: 0,
   labels: [],
   currentItem: null,
@@ -20,6 +23,7 @@ const els = {
   btnJump: document.getElementById("btn-jump"),
   btnRandom: document.getElementById("btn-random"),
   btnSave: document.getElementById("btn-save"),
+  filterMode: document.getElementById("filter-mode"),
   workspace: document.getElementById("workspace"),
   emptyState: document.getElementById("empty-state"),
   imagesContainer: document.getElementById("images-container"),
@@ -94,15 +98,81 @@ function setNavEnabled(enabled) {
   els.btnJump.disabled = !enabled;
   els.btnRandom.disabled = !enabled;
   els.btnSave.disabled = !enabled;
+  els.filterMode.disabled = !enabled;
+}
+
+function syncLabelStats(data) {
+  if (typeof data.annotated_count === "number") {
+    state.annotatedCount = data.annotated_count;
+  }
+  if (typeof data.labeled_count === "number") {
+    state.labeledCount = data.labeled_count;
+  }
+  if (Array.isArray(data.labeled_indices)) {
+    state.labeledIndices = data.labeled_indices;
+  }
+}
+
+function getViewIndices() {
+  if (state.filterMode === "labeled") {
+    return state.labeledIndices;
+  }
+  if (!state.loaded || state.total <= 0) {
+    return [];
+  }
+  return Array.from({ length: state.total }, (_, index) => index);
+}
+
+function findAdjacentIndex(direction) {
+  const indices = getViewIndices();
+  if (!indices.length) {
+    return null;
+  }
+  const pos = indices.indexOf(state.currentIndex);
+  if (pos === -1) {
+    return direction > 0 ? indices[0] : indices[indices.length - 1];
+  }
+  const nextPos = pos + direction;
+  if (nextPos < 0 || nextPos >= indices.length) {
+    return null;
+  }
+  return indices[nextPos];
+}
+
+function ensureCurrentInFilter({ notifyEmpty = true } = {}) {
+  const indices = getViewIndices();
+  if (state.filterMode !== "labeled") {
+    return true;
+  }
+  if (!indices.length) {
+    if (notifyEmpty) {
+      showToast("暂无已打标签的数据");
+    }
+    return false;
+  }
+  if (!indices.includes(state.currentIndex)) {
+    loadItem(indices[0]);
+  }
+  return true;
 }
 
 function updateProgress() {
-  els.progressText.textContent = state.loaded
-    ? `${state.currentIndex + 1} / ${state.total}`
-    : "0 / 0";
-  els.annotatedText.textContent = `已标注 ${state.annotatedCount}`;
+  const indices = getViewIndices();
+  if (state.loaded && state.filterMode === "labeled") {
+    const pos = indices.indexOf(state.currentIndex);
+    els.progressText.textContent = pos >= 0
+      ? `${pos + 1} / ${indices.length}`
+      : `- / ${indices.length}`;
+  } else {
+    els.progressText.textContent = state.loaded
+      ? `${state.currentIndex + 1} / ${state.total}`
+      : "0 / 0";
+  }
+  els.annotatedText.textContent = `已打标签 ${state.labeledCount} / 共 ${state.total}`;
   els.jumpInput.value = state.currentIndex;
   els.jumpInput.max = Math.max(0, state.total - 1);
+  els.btnPrev.disabled = findAdjacentIndex(-1) === null;
+  els.btnNext.disabled = findAdjacentIndex(1) === null;
 }
 
 function renderLabels() {
@@ -170,13 +240,18 @@ function applyAnnotation(annotation) {
 }
 
 function jumpToRandom() {
-  if (!state.loaded || state.total <= 0) return;
+  if (!state.loaded) return;
+  const indices = getViewIndices();
+  if (!indices.length) {
+    showToast(state.filterMode === "labeled" ? "暂无已打标签的数据" : "暂无数据");
+    return;
+  }
   let idx;
-  if (state.total === 1) {
-    idx = 0;
+  if (indices.length === 1) {
+    idx = indices[0];
   } else {
     do {
-      idx = Math.floor(Math.random() * state.total);
+      idx = indices[Math.floor(Math.random() * indices.length)];
     } while (idx === state.currentIndex);
   }
   loadItem(idx);
@@ -194,7 +269,8 @@ async function loadItem(index) {
     `task: ${item.task_type || "-"}`,
     `shard: ${item.shard || "-"}`,
     `row_index: ${item.row_index ?? "-"}`,
-  ].join(" | ");
+    item.annotation?.labels?.length ? "已打标签" : "",
+  ].filter(Boolean).join(" | ");
 
   els.humanText.innerHTML = formatConversationText(item.human, item.image_id_list);
   els.gptText.innerHTML = formatConversationText(item.gpt, item.image_id_list);
@@ -288,8 +364,10 @@ async function openFolder() {
     });
     state.loaded = true;
     state.total = data.total;
-    state.annotatedCount = data.annotated_count;
+    syncLabelStats(data);
     state.currentIndex = 0;
+    state.filterMode = "all";
+    els.filterMode.value = "all";
     const typeLabel = data.source_type ? `[${data.source_type}]` : "";
     els.folderStatus.textContent = `已导入${typeLabel}: ${data.folder}（${data.total} 条）`;
     els.workspace.classList.remove("hidden");
@@ -323,10 +401,14 @@ async function saveAnnotation({ autoNext = false } = {}) {
       body: JSON.stringify(payload),
     });
     state.annotatedCount = data.annotated_count;
+    syncLabelStats(data);
     updateProgress();
     showToast("保存成功");
-    if (autoNext && state.currentIndex < state.total - 1) {
-      await loadItem(state.currentIndex + 1);
+    if (autoNext) {
+      const nextIndex = findAdjacentIndex(1);
+      if (nextIndex !== null) {
+        await loadItem(nextIndex);
+      }
     }
   } catch (err) {
     showToast(err.message);
@@ -341,7 +423,9 @@ async function init() {
     if (meta.loaded) {
       state.loaded = true;
       state.total = meta.total;
-      state.annotatedCount = meta.annotated_count;
+      syncLabelStats(meta);
+      state.filterMode = "all";
+      els.filterMode.value = "all";
       els.folderInput.value = meta.folder || "";
       const typeLabel = meta.source_type ? `[${meta.source_type}]` : "";
       els.folderStatus.textContent = `已导入${typeLabel}: ${meta.folder}（${meta.total} 条）`;
@@ -374,18 +458,32 @@ els.browseModal.addEventListener("click", (e) => {
   if (e.target === els.browseModal) closeBrowseModal();
 });
 els.btnPrev.addEventListener("click", () => {
-  if (state.currentIndex > 0) loadItem(state.currentIndex - 1);
+  const prevIndex = findAdjacentIndex(-1);
+  if (prevIndex !== null) loadItem(prevIndex);
 });
 els.btnNext.addEventListener("click", () => {
-  if (state.currentIndex < state.total - 1) loadItem(state.currentIndex + 1);
+  const nextIndex = findAdjacentIndex(1);
+  if (nextIndex !== null) loadItem(nextIndex);
 });
 els.btnJump.addEventListener("click", () => {
   const idx = Number(els.jumpInput.value);
-  if (Number.isInteger(idx) && idx >= 0 && idx < state.total) {
-    loadItem(idx);
-  } else {
+  if (!Number.isInteger(idx) || idx < 0 || idx >= state.total) {
     showToast("跳转 index 无效");
+    return;
   }
+  if (state.filterMode === "labeled" && !state.labeledIndices.includes(idx)) {
+    showToast("当前筛选下该 index 不在已打标签列表中");
+    return;
+  }
+  loadItem(idx);
+});
+els.filterMode.addEventListener("change", () => {
+  state.filterMode = els.filterMode.value;
+  if (!ensureCurrentInFilter()) {
+    state.filterMode = "all";
+    els.filterMode.value = "all";
+  }
+  updateProgress();
 });
 els.btnRandom.addEventListener("click", jumpToRandom);
 els.btnSave.addEventListener("click", () => saveAnnotation({ autoNext: true }));
@@ -404,8 +502,14 @@ document.addEventListener("keydown", (e) => {
     jumpToRandom();
     return;
   }
-  if (e.key === "ArrowLeft" && state.currentIndex > 0) loadItem(state.currentIndex - 1);
-  if (e.key === "ArrowRight" && state.currentIndex < state.total - 1) loadItem(state.currentIndex + 1);
+  if (e.key === "ArrowLeft") {
+    const prevIndex = findAdjacentIndex(-1);
+    if (prevIndex !== null) loadItem(prevIndex);
+  }
+  if (e.key === "ArrowRight") {
+    const nextIndex = findAdjacentIndex(1);
+    if (nextIndex !== null) loadItem(nextIndex);
+  }
 });
 
 init();
