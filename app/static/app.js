@@ -49,6 +49,13 @@ const browseState = {
   workspace: null,
 };
 
+function appUrl(path) {
+  const base = document.querySelector('meta[name="app-base"]')?.content || "";
+  const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${normalizedBase}${normalizedPath}`;
+}
+
 function showToast(message) {
   els.toast.textContent = message;
   els.toast.classList.remove("hidden");
@@ -57,7 +64,7 @@ function showToast(message) {
 }
 
 async function api(path, options = {}) {
-  const res = await fetch(path, {
+  const res = await fetch(appUrl(path), {
     cache: "no-store",
     ...options,
     headers: {
@@ -129,7 +136,7 @@ function renderImages(item) {
     card.className = "image-card";
     if (img.available) {
       const imageEl = document.createElement("img");
-      imageEl.src = `/api/image/${img.image_id}?t=${Date.now()}`;
+      imageEl.src = `${appUrl(`/api/image/${img.image_id}`)}?t=${Date.now()}`;
       imageEl.alt = `image ${idx + 1}`;
       imageEl.addEventListener("click", () => {
         els.lightboxImg.src = imageEl.src;

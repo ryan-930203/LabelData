@@ -9,7 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pyarrow.parquet as pq
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, make_response, render_template, request, send_from_directory
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 APP_DIR = Path(__file__).resolve().parent
 LABELS_PATH = APP_DIR / "labels.json"
@@ -27,6 +28,12 @@ NO_CACHE_HEADERS = {
 def disable_proxy_cache(response):
     if request.path == "/" or request.path.startswith("/api/"):
         response.headers.update(NO_CACHE_HEADERS)
+    elif request.path.startswith("/static/"):
+        path = request.path.rsplit("?", 1)[0]
+        if path.endswith(".css"):
+            response.headers["Content-Type"] = "text/css; charset=utf-8"
+        elif path.endswith(".js"):
+            response.headers["Content-Type"] = "application/javascript; charset=utf-8"
     return response
 
 
@@ -423,7 +430,7 @@ def dataset_info() -> dict:
 
 @app.route("/")
 def index_page():
-    response = send_from_directory(app.static_folder, "index.html", conditional=False)
+    response = make_response(render_template("index.html"))
     response.headers.update(NO_CACHE_HEADERS)
     return response
 
@@ -610,6 +617,9 @@ def main():
 
     print(f"监听 {args.host}:{args.port}")
     app.run(host=args.host, port=args.port, debug=False, threaded=True)
+
+
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 
 if __name__ == "__main__":
