@@ -39,13 +39,9 @@ OPEN_BROWSER=0 HOST=0.0.0.0 ./start.sh
 
 ```bash
 cd app
-python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python app.py
+python3 -m pip install -r requirements.txt
+python3 app.py
 ```
-
-Linux 若 `python3 -m venv` 失败，请先安装 `python3-venv`（Debian/Ubuntu: `sudo apt install python3-venv`）。
 
 若 `pip` 遇到 SSL 错误，可用清华 HTTP 镜像（跳过 SSL）：
 

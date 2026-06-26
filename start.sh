@@ -3,7 +3,6 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="$ROOT_DIR/app"
-VENV_DIR="$APP_DIR/.venv"
 HOST="${HOST:-127.0.0.1}"
 PORT="${PORT:-5000}"
 OPEN_BROWSER="${OPEN_BROWSER:-1}"
@@ -44,53 +43,6 @@ open_browser() {
   fi
 }
 
-venv_python() {
-  if [[ -x "$VENV_DIR/bin/python" ]]; then
-    echo "$VENV_DIR/bin/python"
-  elif [[ -x "$VENV_DIR/Scripts/python.exe" ]]; then
-    echo "$VENV_DIR/Scripts/python.exe"
-  else
-    return 1
-  fi
-}
-
-activate_venv() {
-  if [[ -f "$VENV_DIR/bin/activate" ]]; then
-    # shellcheck source=/dev/null
-    source "$VENV_DIR/bin/activate"
-  elif [[ -f "$VENV_DIR/Scripts/activate" ]]; then
-    # shellcheck source=/dev/null
-    source "$VENV_DIR/Scripts/activate"
-  else
-    echo "错误: 无法激活虚拟环境: $VENV_DIR" >&2
-    exit 1
-  fi
-}
-
-ensure_venv() {
-  local py_bin
-
-  if [[ -d "$VENV_DIR" ]]; then
-    py_bin="$(venv_python || true)"
-    if [[ -n "$py_bin" ]] && "$py_bin" -c "import sys; sys.exit(0)" >/dev/null 2>&1; then
-      return 0
-    fi
-    echo "虚拟环境无效或来自其他平台，正在重建: $VENV_DIR"
-    rm -rf "$VENV_DIR"
-  fi
-
-  echo "创建虚拟环境: $VENV_DIR"
-  if ! python3 -m venv "$VENV_DIR" 2>/dev/null; then
-    cat >&2 <<'EOF'
-错误: 创建虚拟环境失败。
-Linux 请先安装 venv 模块，例如:
-  Debian/Ubuntu: sudo apt install python3-venv python3-pip
-  RHEL/CentOS:   sudo dnf install python3
-EOF
-    exit 1
-  fi
-}
-
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   usage
   exit 0
@@ -106,11 +58,8 @@ if [[ ! -d "$APP_DIR" ]]; then
   exit 1
 fi
 
-ensure_venv
-activate_venv
-
 echo "安装/检查依赖..."
-python -m pip install -q -r "$APP_DIR/requirements.txt"
+python3 -m pip install -q -r "$APP_DIR/requirements.txt"
 
 cd "$APP_DIR"
 
@@ -135,4 +84,4 @@ fi
 
 echo "启动服务: $url"
 echo "按 Ctrl+C 停止"
-exec python app.py "${args[@]}"
+exec python3 app.py "${args[@]}"

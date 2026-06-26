@@ -22,13 +22,13 @@ OPEN_BROWSER=0 HOST=0.0.0.0 ./start.sh
 ```bash
 # Debian / Ubuntu
 sudo apt update
-sudo apt install -y python3 python3-venv python3-pip
+sudo apt install -y python3 python3-pip
 
 # RHEL / CentOS / Fedora
 sudo dnf install -y python3 python3-pip
 ```
 
-首次运行 `./start.sh` 会自动创建虚拟环境并安装依赖。若本地存在其他平台创建的 `.venv`，脚本会自动检测并重建。
+首次运行 `./start.sh` 会用系统 Python 安装依赖并启动。若 pip 报权限错误，可先执行 `python3 -m pip install --user -r app/requirements.txt`。
 
 ## 环境变量
 
